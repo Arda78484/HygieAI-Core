@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------
+  # SERVICE: FLOWISE (Backend)
+  # -------------------------------------------------------
+  flowise:
+    image: flowiseai/flowise
+    container_name: hygieai-brain
+    restart: always
+    environment:
+      - PORT=3000
+    # Store data one level up relative to this file to keep things clean
+    volumes:
+      - ../flowise_data:/root/.flowise
+    ports:
+      - "3000:3000"
+
+  # -------------------------------------------------------
+  # SERVICE: FRONTEND (Gradio UI)
+  # -------------------------------------------------------
+  frontend:
+    build:
+      # CRITICAL: Set build context to project root (one level up)
+      context: ..
+      # Path to Dockerfile relative to the build context
+      dockerfile: docker/Dockerfile
+    container_name: hygieai-face
+    restart: always
+    ports:
+      - "7860:7860"
+    environment:
+      # Internal Docker Networking
+      - FLOWISE_API_URL=http://flowise:3000
+      # Flow ID placeholder (Update this after Flowise setup)
+      - TRIAGE_ID=YOUR_FLOW_ID_HERE
+    depends_on:
+      - flowise
+
+  # -------------------------------------------------------
+  # SERVICE: NGINX (Proxy & SSL)
+  # -------------------------------------------------------
+  nginx:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ../nginx_data:/data
+      - ../letsencrypt:/etc/letsencrypt
