@@ -1,57 +1,50 @@
-import gradio as gr
-import requests
 import os
+import requests
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
-# ---------------------------------------------------------
-# CONFIGURATION & ENVIRONMENT VARIABLES
-# ---------------------------------------------------------
-
-# The Base URL for the Flowise API.
-# - In Docker (Production): This is injected as 'http://flowise:3000' via docker-compose.
-# - Local Development: Defaults to 'http://localhost:3000'.
+# --- Configuration ---
 BASE_API_URL = os.getenv("FLOWISE_API_URL", "http://localhost:3000")
 
-# The specific Chatflow ID from Flowise.
-# NOTE: This is NOT a URL. It is the UUID string found at the end of the API endpoint.
-# Example: "98089ccf-911f-4821-9196-416a160b329f"
-TRIAGE_FLOW_ID = os.getenv("TRIAGE_ID", "YOUR_DEFAULT_LOCAL_ID_HERE")
+TRIAGE_FLOW_ID = os.getenv("TRIAGE_ID", "682f7ed3-3b0f-436c-b907-7bc7d6e706f9")
 
-# ---------------------------------------------------------
-# CORE LOGIC
-# ---------------------------------------------------------
+FLOWISE_ENDPOINT = f"{BASE_API_URL}/api/v1/prediction/{TRIAGE_FLOW_ID}"
 
-def ask_hygieai(message, history):
+# --- Flask App Initialization ---
+app = Flask(__name__)
+# Enable Cross-Origin Resource Sharing for your frontend
+CORS(app)
+
+# --- API Endpoint ---
+@app.route('/api/chat', methods=['POST'])
+def chat_proxy():
     """
-    Sends the user message to the Flowise API and returns the response.
+    Receives a message from the frontend, forwards it to Flowise,
+    and returns the Flowise response.
     """
-    # Construct the full API endpoint
-    api_url = f"{BASE_API_URL}/api/v1/prediction/{TRIAGE_FLOW_ID}"
-    
-    payload = {"question": message}
-    
     try:
-        # Send POST request to Flowise
-        response = requests.post(api_url, json=payload)
-        response.raise_for_status() # Raise an error for bad status codes (4xx, 5xx)
-        
-        # Parse JSON response
-        return response.json().get("text", "⚠️ Error: Received empty response from Flowise.")
-        
-    except requests.exceptions.ConnectionError:
-        return (f"⚠️ Connection Error: Could not connect to Flowise at '{BASE_API_URL}'.\n"
-                f"Ensure the backend container is running.")
+        # Get the JSON data from the frontend's request
+        frontend_data = request.json
+        user_message = frontend_data.get('message')
+
+        if not user_message:
+            return jsonify({"error": "Message is required"}), 400
+
+        # Prepare the payload for the Flowise API
+        flowise_payload = {"question": user_message}
+
+        # Forward the request to the Flowise container
+        response = requests.post(FLOWISE_ENDPOINT, json=flowise_payload)
+        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+
+        # Return the JSON response from Flowise back to the frontend
+        return jsonify(response.json())
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Could not connect to Flowise: {e}"}), 502
     except Exception as e:
-        return f"System Error: {str(e)}"
+        return jsonify({"error": f"An internal error occurred: {e}"}), 500
 
-# ---------------------------------------------------------
-# UI SETUP
-# ---------------------------------------------------------
-
-with gr.Blocks(theme=gr.themes.Soft(), title="HygieAI") as demo:
-    gr.Markdown("# 🏥 HygieAI: Clinical Triage Assistant")
-    gr.ChatInterface(fn=ask_hygieai)
-
-# Launch configuration
-if __name__ == "__main__":
-    # Server name '0.0.0.0' is required for Docker networking
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+if __name__ == '__main__':
+    # Run on 0.0.0.0 to be accessible from other Docker containers
+    app.run(host='0.0.0.0', port=5000)

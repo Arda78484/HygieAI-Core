@@ -1,53 +1,35 @@
 version: '3.8'
 
 services:
-  # -------------------------------------------------------
-  # SERVICE: FLOWISE (Backend)
-  # -------------------------------------------------------
-  flowise:
-    image: flowiseai/flowise
-    container_name: hygieai-brain
-    restart: always
-    environment:
-      - PORT=3000
-    # Store data one level up relative to this file to keep things clean
-    volumes:
-      - ../flowise_data:/root/.flowise
+  # The Python Backend Service (Proxy)
+  backend:
+    build: ../src
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-
-  # -------------------------------------------------------
-  # SERVICE: FRONTEND (Gradio UI)
-  # -------------------------------------------------------
-  frontend:
-    build:
-      # CRITICAL: Set build context to project root (one level up)
-      context: ..
-      # Path to Dockerfile relative to the build context
-      dockerfile: docker/Dockerfile
-    container_name: hygieai-face
-    restart: always
-    ports:
-      - "7860:7860"
+      - "5000:5000"
     environment:
-      # Internal Docker Networking
       - FLOWISE_API_URL=http://flowise:3000
-      # Flow ID placeholder (Update this after Flowise setup)
-      - TRIAGE_ID=YOUR_FLOW_ID_HERE
+      # OPTIONAL: You can also pass the ID here
+      # - TRIAGE_ID=your-flow-id
     depends_on:
       - flowise
 
-  # -------------------------------------------------------
-  # SERVICE: NGINX (Proxy & SSL)
-  # -------------------------------------------------------
-  nginx:
-    image: 'jc21/nginx-proxy-manager:latest'
-    container_name: nginx-proxy
+  # The Flowise AI Service
+  flowise:
+    image: flowiseai/flowise
     restart: unless-stopped
     ports:
-      - '80:80'
-      - '81:81'
-      - '443:443'
+      - "3000:3000"
     volumes:
-      - ../nginx_data:/data
-      - ../letsencrypt:/etc/letsencrypt
+      # This saves your Flowise data in your project folder
+      - ../flowise_data:/root/.flowise
+
+  # The React Frontend Service
+  frontend:
+    build: ../frontend
+    restart: unless-stopped
+    ports:
+      # Your website will be available at http://localhost:8080
+      - "8080:80"
+    depends_on:
+      - backend
