@@ -29,7 +29,7 @@ services:
       - "5000:5000"
     environment:
       - FLOWISE_API_URL=http://flowise:3000
-      - TRIAGE_ID=${TRIAGE_ID:-682f7ed3-3b0f-436c-b907-7bc7d6e706f9}
+      - TRIAGE_ID=${TRIAGE_ID:-8643a4dc-f0c8-43d9-bcdf-a8b3e2cffc23}
     depends_on:
       - flowise
 

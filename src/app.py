@@ -6,7 +6,7 @@ from flask_cors import CORS
 # --- Configuration ---
 BASE_API_URL = os.getenv("FLOWISE_API_URL", "http://localhost:3000")
 
-TRIAGE_FLOW_ID = os.getenv("TRIAGE_ID", "682f7ed3-3b0f-436c-b907-7bc7d6e706f9")
+TRIAGE_FLOW_ID = os.getenv("TRIAGE_ID", "8643a4dc-f0c8-43d9-bcdf-a8b3e2cffc23")
 
 FLOWISE_ENDPOINT = f"{BASE_API_URL}/api/v1/prediction/{TRIAGE_FLOW_ID}"
 
