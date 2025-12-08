@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './App.css';
 
 // --- SVGs for Icons ---
@@ -22,15 +24,31 @@ const ArrowIcon = () => (
 
 // --- Component: Header ---
 // Updated to use both logo.svg and hygieai-white.svg
-const Header = () => (
+const Header = ({ language, onToggleLanguage }) => (
   <header className="header">
-    <Logo size={32} />
-    <img src="/hygieai-white.svg" alt="HygieAI" className="logo-text-img" />
+    <div className="header-left">
+      <Logo size={32} />
+      <img src="/hygieai-white.svg" alt="HygieAI" className="logo-text-img" />
+    </div>
+    <div className="header-right">
+      <div className="language-switch">
+        <span className={`lang-label ${language === 'tr' ? 'active' : ''}`}>TR</span>
+        <label className="switch">
+          <input 
+            type="checkbox" 
+            checked={language === 'en'} 
+            onChange={() => onToggleLanguage(language === 'tr' ? 'en' : 'tr')} 
+          />
+          <span className="slider round"></span>
+        </label>
+        <span className={`lang-label ${language === 'en' ? 'active' : ''}`}>EN</span>
+      </div>
+    </div>
   </header>
 );
 
 // --- Component: Landing Page ---
-const LandingPage = ({ onStartChat }) => {
+const LandingPage = ({ onStartChat, language }) => {
   const [input, setInput] = useState('');
 
   const handleSubmit = (e) => {
@@ -38,19 +56,34 @@ const LandingPage = ({ onStartChat }) => {
     if (input.trim()) onStartChat(input);
   };
 
+  const texts = {
+    en: {
+      title: "How may I help you today?",
+      subtitle: "Type out your problem and we will diagnose it for you.",
+      placeholder: "Enter your prompt here."
+    },
+    tr: {
+      title: "Bugün size nasıl yardımcı olabilirim?",
+      subtitle: "Sorununuzu yazın, sizin için teşhis edelim.",
+      placeholder: "Şikayetinizi buraya yazın."
+    }
+  };
+
+  const t = texts[language];
+
   return (
     <div className="landing-container">
       <div className="landing-content">
         <div style={{ margin: '0 auto', width: 'fit-content' }}>
             <Logo size={80} />
         </div>
-        <h1 className="landing-title">How may I help you today?</h1>
-        <p className="landing-subtitle">Type out your problem and we will diagnose it for you.</p>
+        <h1 className="landing-title">{t.title}</h1>
+        <p className="landing-subtitle">{t.subtitle}</p>
         
         <form onSubmit={handleSubmit} className="input-wrapper">
           <input 
             className="main-input"
-            placeholder="Enter your prompt here."
+            placeholder={t.placeholder}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             autoFocus
@@ -65,7 +98,7 @@ const LandingPage = ({ onStartChat }) => {
 };
 
 // --- Component: Chat Interface ---
-const ChatInterface = ({ messages, isLoading, onSendMessage }) => {
+const ChatInterface = ({ messages, isLoading, onSendMessage, language }) => {
   const [input, setInput] = useState('');
   const endOfChatRef = useRef(null);
 
@@ -76,6 +109,21 @@ const ChatInterface = ({ messages, isLoading, onSendMessage }) => {
       setInput('');
     }
   };
+
+  const texts = {
+    en: {
+      thinking: "Thinking...",
+      reply: "Reply...",
+      error: "Sorry, I'm having trouble connecting to the server."
+    },
+    tr: {
+      thinking: "Düşünüyor...",
+      reply: "Yanıtla...",
+      error: "Üzgünüm, sunucuya bağlanırken bir sorun yaşadım."
+    }
+  };
+
+  const t = texts[language];
 
   useEffect(() => {
     endOfChatRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -92,14 +140,20 @@ const ChatInterface = ({ messages, isLoading, onSendMessage }) => {
               </div>
             )}
             <div className={`bubble ${msg.type}`}>
-              {msg.text}
+              {msg.type === 'bot' ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {msg.text}
+                </ReactMarkdown>
+              ) : (
+                msg.text
+              )}
             </div>
           </div>
         ))}
         {isLoading && (
             <div className="message-row bot">
                  <div className="bot-icon"><Logo size={28} /></div>
-                 <div className="bubble bot">Thinking...</div>
+                 <div className="bubble bot">{t.thinking}</div>
             </div>
         )}
         <div ref={endOfChatRef} />
@@ -109,7 +163,7 @@ const ChatInterface = ({ messages, isLoading, onSendMessage }) => {
         <form onSubmit={handleSubmit} className="input-wrapper">
           <input 
             className="main-input"
-            placeholder="Reply..."
+            placeholder={t.reply}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
@@ -129,6 +183,7 @@ function App() {
   const [view, setView] = useState('home'); // 'home' | 'chat'
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [language, setLanguage] = useState('en'); // 'en' | 'tr'
 
   const handleSendMessage = async (userMessage) => {
     if (view === 'home') setView('chat');
@@ -151,7 +206,10 @@ function App() {
       
       setMessages(prev => [...prev, { type: 'bot', text: botText }]);
     } catch (error) {
-      setMessages(prev => [...prev, { type: 'bot', text: "Sorry, I'm having trouble connecting to the server." }]);
+      const errorMsg = language === 'en' 
+        ? "Sorry, I'm having trouble connecting to the server." 
+        : "Üzgünüm, sunucuya bağlanırken bir sorun yaşadım.";
+      setMessages(prev => [...prev, { type: 'bot', text: errorMsg }]);
     } finally {
       setLoading(false);
     }
@@ -159,14 +217,15 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header />
+      <Header language={language} onToggleLanguage={setLanguage} />
       {view === 'home' ? (
-        <LandingPage onStartChat={handleSendMessage} />
+        <LandingPage onStartChat={handleSendMessage} language={language} />
       ) : (
         <ChatInterface 
           messages={messages} 
           isLoading={loading} 
           onSendMessage={handleSendMessage} 
+          language={language}
         />
       )}
     </div>

@@ -30,11 +30,97 @@ body {
   padding: 20px 40px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between; /* Changed from gap: 12px to space-between */
 }
 
 .logo-text-img {
   height: 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Language Switch */
+.language-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lang-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.lang-label.active {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #333;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: var(--accent-red);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--accent-red);
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }
 
 /* Landing Page View */
@@ -175,13 +261,49 @@ body {
 
 .bubble.bot {
   background-color: transparent;
-  padding: 0; /* Bot text has no background bubble in design */
+  color: var(--text-primary);
+  text-align: left;
+  max-width: 800px;
+  line-height: 1.6;
 }
 
-.bot-icon {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
+.bubble.bot h1, .bubble.bot h2, .bubble.bot h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.bubble.bot h1 { font-size: 1.5em; border-bottom: 1px solid #333; padding-bottom: 0.3em; }
+.bubble.bot h2 { font-size: 1.3em; }
+.bubble.bot h3 { font-size: 1.1em; }
+
+.bubble.bot p {
+  margin-bottom: 1em;
+}
+
+.bubble.bot ul, .bubble.bot ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.bubble.bot li {
+  margin-bottom: 0.5em;
+}
+
+.bubble.bot strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+.bubble.bot blockquote {
+  border-left: 4px solid var(--accent-red);
+  margin: 1em 0;
+  padding-left: 1em;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5em 1em;
+  border-radius: 4px;
 }
 
 .chat-footer {
