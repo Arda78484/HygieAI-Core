@@ -114,7 +114,7 @@ The system uses **Flowise** (a visual LLM workflow builder) as the backend AI en
 
 ### AI/ML
 - **LLM Platform**: Flowise (Visual LLM workflow builder)
-- **AI Models**: Configurable (typically OpenAI, Claude, etc.)
+- **AI Models**: nv-embedv2, meta maverick
 
 ### Deployment & DevOps
 - **Containerization**: Docker
