@@ -90,9 +90,57 @@ The system uses **Flowise** (a visual LLM workflow builder) as the backend AI en
 │              Flowise (AI Engine)                             │
 │                                                              │
 │  ├─ Triage Chatflow   (ID: 8643a4dc-f0c8-43d9...)           │
-│  └─ Analysis Chatflow (ID: ed48d43e-4bc7-440d...)           │
+   └─ Analysis Chatflow (ID: ed48d43e-4bc7-440d...)           │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Flowise Workflow Configuration
+
+The core intelligence of HygieAI relies on sophisticated Flowise workflows. Below is the detailed configuration for the **Blood Analysis & Report Assistant** flow, which utilizes a RAG (Retrieval Augmented Generation) architecture to process and analyze medical documents.
+
+### 🧬 Analysis Flow Architecture (RAG)
+
+This workflow is designed to ingest PDF documents, split them into manageable chunks, embed them into a vector store, and use a powerful LLM to answer questions based on the document context.
+
+**Components:**
+
+1.  **Document Loader (Pdf File)**
+    *   **Function**: Loads the uploaded medical report (PDF).
+    *   **Configuration**: Accepts file uploads from the API.
+
+2.  **Text Splitter (Recursive Character Text Splitter)**
+    *   **Function**: Splits the document text into smaller chunks for efficient processing.
+    *   **Chunk Size**: `1000`
+    *   **Chunk Overlap**: `200`
+
+3.  **Embeddings (OpenAI Embeddings Custom)**
+    *   **Model**: `nvidia/nv-embed-v1`
+    *   **Provider**: NVIDIA NIM (via Custom OpenAI compatible endpoint)
+    *   **Function**: Converts text chunks into vector embeddings.
+
+4.  **Vector Store (In-Memory Vector Store)**
+    *   **Function**: Stores the embeddings temporarily for retrieval.
+    *   **Top K**: `4` (Retrieves the top 4 most relevant chunks).
+
+5.  **Chat Model (Chat NVIDIA NIM)**
+    *   **Model**: `meta/llama-4-maverick-17b-128e-ir`
+    *   **Temperature**: `0.9` (For creative yet accurate generation)
+    *   **Base Path**: `https://integrate.api.nvidia.com/v1`
+    *   **Function**: Generates the final response based on the retrieved context and user query.
+
+6.  **Memory (Buffer Memory)**
+    *   **Function**: Maintains the context of the conversation (chat history).
+
+7.  **Chain (Conversational Retrieval QA Chain)**
+    *   **Function**: Orchestrates the entire process:
+        1.  Takes the user question.
+        2.  Retrieves relevant context from the Vector Store.
+        3.  Passes the context and question to the Chat Model.
+        4.  Returns the answer.
+
+*(Note: The Triage flow follows a simpler conversational structure without document retrieval capabilities.)*
 
 ---
 
@@ -114,7 +162,7 @@ The system uses **Flowise** (a visual LLM workflow builder) as the backend AI en
 
 ### AI/ML
 - **LLM Platform**: Flowise (Visual LLM workflow builder)
-- **AI Models**: nv-embedv2, meta maverick
+- **AI Models**: nv-embed-v1, meta/llama-4-maverick-17b-128e-ir
 
 ### Deployment & DevOps
 - **Containerization**: Docker
