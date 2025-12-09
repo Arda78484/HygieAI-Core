@@ -307,10 +307,6 @@ HygieAI-Core/
 │   ├── requirements.txt            # Python dependencies
 │   └── Dockerfile                  # Backend Docker image
 │
-├── src_old/                        # Legacy backend (deprecated)
-│   ├── app.py
-│   └── requirements.txt
-│
 ├── flow/                           # Flowise Chatflow Exports
 │   ├── HygieAI_Triage Chatflow.json
 │   └── Dexter - Blood Analysis Chatflow.json
