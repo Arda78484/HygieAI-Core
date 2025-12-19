@@ -1,7 +1,7 @@
 # HygieAI-Core
 
 <div align="center">
-  <img src="./public/logo.svg" alt="HygieAI Logo" width="100" height="100" />
+  <img src="./frontend/public/logo.svg" alt="HygieAI Logo" width="100" height="100" />
   <h3>AI-Powered Healthcare Triage & Blood Analysis Assistant</h3>
   <p>A comprehensive healthcare chatbot system for patient triage and medical report analysis</p>
 </div>
